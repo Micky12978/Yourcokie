@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ทบทวนการบวกลบเอกนาม (โหมดทดลอง)</title>
+<style>
+:root{--paper:#eef3f9;--grid:#d3deec;--ink:#14213d;--soft:#52607a;--accent:#e4572e;--good:#1b9a59;--mid:#f0a202;
+--font:Tahoma,"Leelawadee UI","Thonburi","Noto Sans Thai","Sarabun",system-ui,sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:var(--paper) linear-gradient(var(--grid) 1px,transparent 1px) 0 0/28px 28px;
+background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+color:var(--ink);font:18px/1.5 var(--font)}
+main{max-width:560px;margin:0 auto;padding:24px 14px 40px}
+h1,p{margin:0}
+.card{background:#fff;border:2px solid var(--ink);border-radius:14px;box-shadow:6px 6px 0 var(--ink);padding:22px 18px}
+.hidden{display:none!important}
+.sub{color:var(--soft);margin-top:8px}
+.center{text-align:center;margin-top:18px}
+.note{background:#fff4d6;border:2px dashed var(--ink);border-radius:10px;padding:8px 12px;margin-top:14px;font-size:16px}
+button{font:800 20px var(--font);color:#fff;background:var(--accent);border:2px solid var(--ink);border-radius:10px;padding:10px 24px;
+cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+button:active{transform:translate(3px,3px);box-shadow:none}
+button:focus-visible{outline:3px solid var(--mid);outline-offset:2px}
+button.ghost{background:#fff;color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+td,th{padding:7px 4px;border-bottom:1px dashed var(--grid);text-align:left}
+th{color:var(--soft);font-size:15px;border-bottom:2px solid var(--ink)}
+td:last-child,th:last-child{text-align:right}
+.pts{margin:16px 0}.pts td:last-child{font-weight:800;font-size:22px}
+.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:10px;border:2px solid var(--ink)}
+sup{font-size:.62em;line-height:0;position:relative;top:-.15em}
+.hud{display:flex;justify-content:space-between;font-weight:600}
+.hud b{font-size:26px;font-variant-numeric:tabular-nums}
+.timebox{display:flex;justify-content:space-between;align-items:center;margin:8px 0 12px;gap:8px}
+.clock{font-size:38px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.worth{font-weight:800;padding:4px 12px;border:2px solid var(--ink);border-radius:999px;color:#fff;font-size:15px}
+.w10{background:var(--good)}.w5{background:var(--mid);color:var(--ink)}.w3{background:var(--accent)}
+.pausebtn{font-size:16px;padding:4px 12px;color:var(--ink);background:#fff;box-shadow:2px 2px 0 var(--ink)}
+.pausebtn:disabled{opacity:.45;cursor:default}
+.zones{position:relative;display:flex;height:16px;border:2px solid var(--ink);border-radius:9px;overflow:hidden;margin-bottom:14px}
+.zones span:nth-child(1){width:25%;background:var(--good)}.zones span:nth-child(2){width:25%;background:var(--mid)}.zones span:nth-child(3){width:50%;background:var(--accent)}
+.needle{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--ink);left:0}
+.playarea{position:relative}
+.qbox{border:2px solid var(--ink);border-radius:12px;background:#fff4d6;padding:10px;text-align:center;margin-bottom:14px}
+.qbox small{display:block;color:var(--soft);font-size:15px}
+.qexpr{font-size:32px;font-weight:800;line-height:1.35;overflow-wrap:anywhere}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button.choice{display:flex;align-items:center;gap:10px;text-align:left;min-height:66px;padding:8px 12px;color:var(--ink);background:#fff;font-size:24px;font-weight:600;overflow-wrap:anywhere}
+.lt{flex:none;width:30px;height:30px;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-size:16px;font-weight:800;background:var(--paper)}
+button.choice.right{background:var(--good);color:#fff}
+button.choice:disabled{cursor:default;transform:none}
+button.choice:disabled:not(.right){opacity:.55}
+.pause-ov{position:absolute;inset:0;z-index:2;background:#fff;border:2px dashed var(--ink);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:150px}
+.pause-ov b{font-size:28px}
+.feedback{margin-top:14px;min-height:70px;text-align:center}
+.msg{font-size:22px;font-weight:800;color:var(--good)}
+.detail{font-size:16px;color:var(--soft)}
+.big{font-size:72px;font-weight:800;line-height:1}.big small{font-size:26px;color:var(--soft);font-weight:600}
+.rank{font-size:24px;font-weight:800;margin:8px 0 14px;color:var(--accent)}
+.log{margin:14px 0 20px;font-size:16px}
+.choices{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+@media(max-width:480px){body{font-size:16px}main{padding:10px}.card{padding:14px 12px;box-shadow:4px 4px 0 var(--ink)}
+.qexpr{font-size:22px}button.choice{font-size:19px;min-height:54px;padding:6px 8px}.clock{font-size:30px}.big{font-size:52px}}
+@media(max-width:340px){.opts{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){button{transition:none}}
+</style>
+</head>
+<body>
+<main>
+
+<section id="start" class="card">
+  <h1 style="font-size:36px;line-height:1.15">ทบทวนการบวกลบเอกนาม</h1>
+  <p class="sub">เลือกคำตอบจาก 4 ตัวเลือก ตอบได้ครั้งเดียวต่อข้อ</p>
+  <p style="font-size:24px;font-weight:600;margin-top:18px">(3x<sup>2</sup>y) + (5x<sup>2</sup>y) = 8x<sup>2</sup>y</p>
+  <p class="sub">เอกนามคล้ายกันรวมกันได้ เอกนามไม่คล้ายกันเขียนต่อกัน เช่น (3x<sup>2</sup>) + (5x<sup>3</sup>) = 3x<sup>2</sup> + 5x<sup>3</sup></p>
+  <table class="pts">
+    <tr><td><span class="dot" style="background:var(--good)"></span>ตอบภ��ยใน 10 วินาที</td><td>10 คะแนน</td></tr>
+    <tr><td><span class="dot" style="background:var(--mid)"></span>วินาทีที่ 10 ถึง 20</td><td>5 คะแนน</td></tr>
+    <tr><td><span class="dot" style="background:var(--accent)"></span>วินาทีที่ 20 ถึง 40</td><td>3 คะแนน</td></tr>
+  </table>
+  <p class="sub">ข้อละ 40 วินาที ชุดละ 10 ข้อ รวม 4 ชุด พักได้ชุดละ 3 ครั้ง (โจทย์จะถูกซ่อนตอนพัก)</p>
+  <p class="note">โหมดทดลอง: กดตัวเลือกไหนก็นับว่าถูก และไม่มีการส่งหรือบันทึกข้อมูลใดๆ</p>
+  <div class="center"><button id="btnStart" type="button">เริ่มเล่น</button></div>
+</section>
+
+<section id="game" class="card hidden">
+  <div class="hud"><span>ชุด <b id="setNo">1</b> ข้อ <b id="qNo">1</b> / 10</span><span>คะแนน <b id="score">0</b></span></div>
+  <div class="timebox">
+    <div class="clock" id="clock">40.0</div>
+    <button type="button" class="pausebtn" id="btnPause">พัก (3)</button>
+    <div class="worth w10" id="worth">ตอนนี้ได้ 10 คะแนน</div>
+  </div>
+  <div class="zones" aria-hidden="true"><span></span><span></span><span></span><div class="needle" id="needle"></div></div>
+  <div class="playarea">
+    <div class="qbox"><small>จงหาผลลัพธ์</small><div class="qexpr" id="qexpr"></div></div>
+    <div class="opts" id="opts"></div>
+    <div class="pause-ov hidden" id="pauseOv" role="status">
+      <b>พักเกม</b><p class="sub">เวลาหยุดนับแล้ว โจทย์ถูกซ่อนไว้</p>
+      <button type="button" id="pauseResume">เล่นต่อ</button>
+    </div>
+  </div>
+  <div class="feedback" id="feedback" aria-live="polite"></div>
+</section>
+
+<section id="result" class="card hidden">
+  <p class="sub">สรุปผลชุดที่ <span id="resSet">1</span></p>
+  <div class="big"><span id="finalScore">0</span> <small>/ <span id="maxScore">100</span></small></div>
+  <p class="rank" id="rank"></p>
+  <p class="sub">คะแนนรวมทุกชุด <b id="grandA">0</b></p>
+  <table class="log"><thead><tr><th>ข้อ</th><th>โจทย์และเฉลย</th><th>เวลา</th><th>คะแนน</th></tr></thead><tbody id="logBody"></tbody></table>
+  <p style="font-size:22px;font-weight:800;text-align:center;margin-bottom:12px" id="askText"></p>
+  <div class="choices">
+    <button id="btnStop" type="button" class="ghost">หยุดเล่น</button>
+    <button id="btnContinue" type="button">เล่นต่อ</button>
+  </div>
+</section>
+
+<section id="final" class="card hidden">
+  <p class="sub">จบการเล่น</p>
+  <div class="big"><span id="grandB">0</span> <small>/ <span id="grandMax">0</span></small></div>
+  <p class="rank" id="finalRank"></p>
+  <table class="log"><thead><tr><th>ชุด</th><th>คะแนน</th><th>ตอบถูก</th></tr></thead><tbody id="setBody"></tbody></table>
+  <div class="center"><button id="btnAgain" type="button">เริ่มเล่นใหม่</button></div>
+</section>
+
+</main>
+<script>
+(function () {
+  var TOTAL = 10, LIMIT = 40, SETS = 4, MAX_PAUSE = 3;
+  // vars: จำนวนตัวแปร, deg: เลขชี้กำลังสูงสุด, hi: สัมประสิทธิ์สูงสุด, neg: มีเลขลบหรือไม่
+  var CONF = [
+    { vars: 1, deg: 3, hi: 20, neg: false },
+    { vars: 1, deg: 4, hi: 30, neg: true },
+    { vars: 2, deg: 3, hi: 30, neg: true },
+    { vars: 2, deg: 4, hi: 50, neg: true }
+  ];
+  var $ = function (id) { return document.getElementById(id); };
+  var rnd = function (a, b) { return a + Math.floor(Math.random() * (b - a + 1)); };
+  var pick = function (a) { return a[rnd(0, a.length - 1)]; };
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = rnd(0, i), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+  /* ---------- แสดงเอกนาม ---------- */
+  function sup(n) { return n > 1 ? '<sup>' + n + '</sup>' : ''; }
+  function varH(e) { return (e[0] ? 'x' + sup(e[0]) : '') + (e[1] ? 'y' + sup(e[1]) : ''); }
+  function term(c, e) { var a = Math.abs(c), v = varH(e); return (c < 0 ? '−' : '') + (a === 1 ? '' : a) + v; }
+  function expr(c1, e1, c2, e2) { return term(c1, e1) + (c2 < 0 ? ' − ' : ' + ') + term(Math.abs(c2), e2); }
+
+  /* ---------- สร้างโจทย์ ---------- */
+  function exps(cf) {
+    var out = [], i, j;
+    for (i = 0; i <= cf.deg; i++) for (j = 0; j <= (cf.vars === 2 ? cf.deg - i : 0); j++) if (i + j > 0) out.push([i, j]);
+    return out;
+  }
+  function same(a, b) { return a[0] === b[0] && a[1] === b[1]; }
+  function tweaks(e, two) {
+    var d = two ? [[1, 0], [-1, 0], [0, 1], [0, -1]] : [[1, 0], [-1, 0]];
+    return d.map(function (x) { return [e[0] + x[0], e[1] + x[1]]; }).filter(function (x) { return x[0] >= 0 && x[1] >= 0 && x[0] + x[1] > 0; });
+  }
+  function coef(cf) { var v = rnd(1, cf.hi); return cf.neg && Math.random() < 0.5 ? -v : v; }
+
+  function makeQuestion(cf, like) {
+    var P = exps(cf), two = cf.vars === 2, A, B, a, b, op, b2, c;
+    do {
+      A = pick(P); B = like ? A : pick(P.filter(function (p) { return !same(p, A); }));
+      a = coef(cf); b = coef(cf); op = Math.random() < 0.5 ? '+' : '−';
+      b2 = op === '+' ? b : -b; c = a + b2;
+    } while (like && (c === 0 || (!cf.neg && c < 0) || Math.abs(c) > 99));
+
+    var right, wrong = [];
+    if (like) {
+      right = term(c, A);
+      [c + 1, c - 1, -c, a - b2, c + 2, c - 2, c + 10].forEach(function (v) { if (v) wrong.push(term(v, A)); });
+      tweaks(A, two).forEach(function (e) { wrong.push(term(c, e)); });
+      wrong.push(term(c, [A[0] * 2, A[1] * 2]))
+    } else {
+      right = expr(a, A, b2, B);
+      wrong.push(term(a + b2, [A[0] + B[0], A[1] + B[1]]));   // รวมเอกนามไม่คล้ายกัน
+      wrong.push(expr(a, A, -b2, B));
+      wrong.push(expr(-a, A, b2, B));
+      wrong.push(expr(a + 1, A, b2, B));
+      wrong.push(expr(a, A, b2 + (b2 === -1 ? 2 : 1), B));
+      wrong.push(expr(a, B, b2, A));
+      tweaks(A, two).forEach(function (e) { wrong.push(expr(a, e, b2, B)); });
+    }
+    var seen = {}; seen[right] = 1;
+    var picks = shuffle(wrong).filter(function (w) { if (seen[w]) return false; seen[w] = 1; return true; }).slice(0, 3);
+    var n = 3;
+    while (picks.length < 3) { var f = like ? term(c + n, A) : expr(a + n, A, b2, B); if (!seen[f]) { seen[f] = 1; picks.push(f); } n++; }
+    return {
+      q: '(' + term(a, A) + ') ' + op + ' (' + term(b, B) + ')',
+      right: right, picks: picks,
+      why: like ? 'ตัวแปรและเลขชี้กำลังเหมือนกัน จึงรวมสัมประสิทธิ์ได้' : 'ตัวแปรหรือเลขชี้กำลังต่างกัน จึงเขียนต่อกัน รวมเป็นเทอมเดียวไม่ได้'
+    };
+  }
+
+  function buildSet(cf) {
+    var likeN = pick([6, 7, 7, 7, 8]), kinds = [], i;
+    for (i = 0; i < TOTAL; i++) kinds.push(i < likeN);
+    shuffle(kinds);
+    return kinds.map(function (like) {
+      var q = makeQuestion(cf, like);
+      q.opts = shuffle([q.right].concat(q.picks));
+      return q;
+    });
+  }
+
+  /* ---------- สถานะเกม ---------- */
+  var setNo, setScores, qs, round, score, log, cur, startAt, raf, locked, paused, pauseAt, pausesLeft, advTimer;
+
+  function show(id) { ['start', 'game', 'result', 'final'].forEach(function (s) { $(s).classList.toggle('hidden', s !== id); }); }
+  function pointsFor(sec) { return sec < 10 ? 10 : sec < 20 ? 5 : 3; }   // โหมดทดลอง: ได้อย่างน้อย 3 คะแนนเสมอ
+
+  function newGame() { setNo = 0; setScores = []; newSet(); }
+
+  function newSet() {
+    setNo++; round = 0; score = 0; log = []; pausesLeft = MAX_PAUSE;
+    qs = buildSet(CONF[setNo - 1]);
+    $('setNo').textContent = setNo; $('score').textContent = 0;
+    nextRound();
+  }
+
+  function nextRound() {
+    clearTimeout(advTimer);
+    if (++round > TOTAL) { finish(); return; }
+    cur = qs[round - 1]; locked = false; paused = false;
+    $('pauseOv').classList.add('hidden');
+    $('qNo').textContent = round;
+    $('qexpr').innerHTML = '(' + cur.q.slice(1);
+    $('opts').innerHTML = '';
+    cur.opts.forEach(function (o, i) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'choice'; b.dataset.i = i;
+      b.innerHTML = '<span class="lt">' + 'กขคง'.charAt(i) + '</span><span>' + o + '</span>';
+      b.addEventListener('click', function () { choose(i); });
+      $('opts').appendChild(b);
+    });
+    $('feedback').innerHTML = '';
+    updatePause();
+    show('game');
+    startAt = performance.now();
+    cancelAnimationFrame(raf); tick();
+  }
+
+  function updatePause() {
+    var b = $('btnPause');
+    b.textContent = paused ? 'เล่นต่อ' : 'พัก (' + pausesLeft + ')';
+    b.disabled = locked || (!paused && pausesLeft <= 0);
+  }
+
+  function togglePause() {
+    if (locked) return;
+    if (!paused) {
+      if (pausesLeft <= 0) return;
+      pausesLeft--; paused = true; pauseAt = performance.now();
+      cancelAnimationFrame(raf);
+      $('pauseOv').classList.remove('hidden');
+    } else {
+      paused = false; startAt += performance.now() - pauseAt;
+      $('pauseOv').classList.add('hidden'); tick();
+    }
+    updatePause();
+  }
+
+  function tick() {
+    var sec = (performance.now() - startAt) / 1000;
+    if (sec >= LIMIT) { choose(-1); return; }   // หมดเวลา: ระบบเลือกข้อที่ถูกให้
+    $('clock').textContent = (LIMIT - sec).toFixed(1);
+    $('needle').style.left = (sec / LIMIT * 100) + '%';
+    var p = pointsFor(sec), w = $('worth');
+    w.className = 'worth w' + p; w.textContent = 'ตอนนี้ได้ ' + p + ' คะแนน';
+    raf = requestAnimationFrame(tick);
+  }
+
+  // โหมดทดลอง: ไม่ว่าจะเลือกข้อไหน (หรือหมดเวลา) ถือว่าตอบถูกเสมอ
+  function choose(i) {
+    if (locked || paused) return;
+    locked = true; cancelAnimationFrame(raf);
+    var sec = Math.min((performance.now() - startAt) / 1000, LIMIT), p = pointsFor(sec);
+    Array.prototype.forEach.call($('opts').children, function (b) {
+      b.disabled = true;
+      if (cur.opts[b.dataset.i] === cur.right) b.classList.add('right');
+    });
+    score += p; $('score').textContent = score;
+    log.push({ q: cur.q, a: cur.right, sec: sec, pts: p });
+    updatePause();
+    $('feedback').innerHTML = '<div class="msg">ถูกต้อง +' + p + ' คะแนน</div><div class="detail">ใช้เวลา ' + sec.toFixed(1) + ' วินาที · ' + cur.why + '</div>';
+    advTimer = setTimeout(nextRound, 1800);
+  }
+
+  function finish() {
+    cancelAnimationFrame(raf);
+    setScores.push({ score: score, solved: TOTAL });
+    var total = setScores.reduce(function (s, v) { return s + v.score; }, 0), last = setNo >= SETS;
+    $('resSet').textContent = setNo;
+    $('finalScore').textContent = score; $('maxScore').textContent = 100;
+    $('grandA').textContent = total;
+    $('rank').textContent = score >= 90 ? 'เร็วและแม่นมาก' : score >= 60 ? 'ทำได้ดี' : 'ลองตอบให้เร็วขึ้นอีกนิด';
+    $('logBody').innerHTML = log.map(function (r, i) {
+      return '<tr><td>' + (i + 1) + '</td><td>' + r.q + '<div class="detail">เฉลย ' + r.a + '</div></td><td>' + r.sec.toFixed(1) + ' วิ</td><td>' + r.pts + '</td></tr>';
+    }).join('');
+    $('askText').textContent = last ? 'ครบทั้ง ' + SETS + ' ชุดแล้ว' : 'เล่นต่อชุดที่ ' + (setNo + 1) + ' หรือไม่';
+    $('btnContinue').classList.toggle('hidden', last);
+    $('btnStop').textContent = last ? 'ดูสรุปคะแนนรวม' : 'หยุดเล่น';
+    show('result');
+  }
+
+  function showFinal() {
+    var total = setScores.reduce(function (s, v) { return s + v.score; }, 0);
+    $('grandB').textContent = total; $('grandMax').textContent = setScores.length * 100;
+    $('finalRank').textContent = 'เล่นทั้งหมด ' + setScores.length + ' ชุด';
+    $('setBody').innerHTML = setScores.map(function (s, i) {
+      return '<tr><td>' + (i + 1) + '</td><td>' + s.score + ' / 100</td><td>' + s.solved + ' / ' + TOTAL + ' ข้อ</td></tr>';
+    }).join('');
+    show('final');
+  }
+
+  $('btnStart').addEventListener('click', newGame);
+  $('btnAgain').addEventListener('click', newGame);
+  $('btnContinue').addEventListener('click', newSet);
+  $('btnStop').addEventListener('click', showFinal);
+  $('btnPause').addEventListener('click', togglePause);
+  $('pauseResume').addEventListener('click', togglePause);
+})();
+</script>
+</body>
+</html>
